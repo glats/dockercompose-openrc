@@ -1,0 +1,45 @@
+#!/sbin/openrc-run
+
+DOCOCMD="/usr/bin/docker-compose"
+export COMPOSE_HTTP_TIMEOUT=300
+
+depend() {
+  need localmount net docker
+  use dns
+  after docker
+}
+
+configtest() {
+  if ! [ -f "${DOCKER_COMPOSE_FILE}" ]; then
+    eerror "The config file ${DOCKER_COMPOSE_FILE} does not exist!"
+    return 1
+  fi
+  if "${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" config >&/dev/null; then
+    einfo "config: ok"
+  else
+    eerror "config: error"
+    return 1
+  fi
+}
+
+start() {
+  configtest || return 1
+  ebegin "Starting dockerservice ${SUBSVC}"
+  "${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" up -d --no-recreate --no-build
+  eend $?
+}
+
+stop() {
+  ebegin "Stopping dockerservice ${SUBSVC}"
+  "${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" stop --timeout=300
+  eend $?
+}
+
+status() {
+  if [ "$("${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" top | wc -l)" -gt "0" ]; then
+    einfo "status: started"
+  else
+    einfo "status: stopped"
+    return 3
+  fi
+}
