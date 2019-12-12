@@ -31,7 +31,7 @@ start() {
 
 stop() {
   ebegin "Stopping dockerservice ${SUBSVC}"
-  "${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" stop --timeout=300
+  "${DOCOCMD}" -f "${DOCKER_COMPOSE_FILE}" stop
   eend $?
 }
 
